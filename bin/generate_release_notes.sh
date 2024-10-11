@@ -21,6 +21,12 @@ check_tag_exists() {
         exit 1
     fi
 }
+check_branch_exists() {
+    if ! git show-ref --verify --quiet "refs/heads/$1"; then
+        echo -e "${RED}Error: Branch '$1' does not exist.${NC}"
+        exit 1
+    fi
+}
 
 if [ "$#" -lt 1 ]; then
     echo -e "${YELLOW}Usage: $0 <older_tag> [optional: latest_tag]${NC}"
@@ -45,7 +51,7 @@ else
 fi
 
 check_git
-check_tag_exists "$latest_tag"
+check_tag_exists "$older_tag"
 # Build the release notes content
 gpt_prompt="Can you generate release notes based on the following git log? It's generated using: git log --pretty=format:\"- %B\" ${older_tag}..${latest_tag}
 I need it in markdown format, so I can paste it into the release notes
@@ -61,7 +67,7 @@ gpt_prompt+=$'\n'
 gpt_prompt+=$(git --no-pager log --pretty=format:"- %B" ${older_tag}..${latest_tag} | grep -v "Merge branch")
 
 # Copy the release notes to clipboard
-echo "gpt_prompt" | pbcopy
+echo "$gpt_prompt" | pbcopy
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to copy the AI prompt to the clipboard.${NC}"
