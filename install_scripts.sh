@@ -9,9 +9,9 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# show warning if the script is run as root
-if [ "$EUID" -eq 0 ]; then
-    echo -e "${RED}This script should not be run as root.${NC}"
+# show warning if the script is not run as root
+if [ "$EUID" -ne 0 ]; then
+    echo "${RED}Please run as root or use sudo.${NC}"
     exit 1
 fi
 
