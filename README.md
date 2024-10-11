@@ -7,13 +7,23 @@ This repository contains various scripts to help with development and automation
 To install the scripts, navigate to the directory containing `install_scripts.sh` and run:
 
 ```bash
-./install_scripts.sh
+sudo ./install_scripts.sh
 ```
 
-This will copy all `.sh` scripts to your `$HOME/bin` directory, removing the `.sh` extension and making them executable.
+This will copy all `.sh` scripts from the `bin` folder to your `/usr/local/bin` directory, removing the `.sh` extension and making them executable.
 
 
 ## Available Scripts
+
+### `docker-stop`
+
+Stops and removes all running Docker containers.
+
+#### Usage
+
+```bash
+./docker-stop.sh
+```
 
 ### `generate_release_notes`
 
