@@ -22,16 +22,30 @@ check_tag_exists() {
     fi
 }
 
-if [ "$#" -ne 2 ]; then
-    echo -e "${YELLOW}Usage: $0 <latest_tag> <older_tag>${NC}"
+if [ "$#" -lt 1 ]; then
+    echo -e "${YELLOW}Usage: $0 <older_tag> [optional: latest_tag]${NC}"
     exit 1
 fi
-latest_tag=$1
-older_tag=$2
-check_git
 
+older_tag=$1
+
+if [ "$#" -eq 2 ]; then
+    latest_tag=$2
+    check_tag_exists "$latest_tag" || check_branch_exists "$latest_tag"
+else
+    # Default to 'main' or 'master' if not provided
+    if git show-ref --quiet --verify "refs/heads/main"; then
+        latest_tag="main"
+    elif git show-ref --quiet --verify "refs/heads/master"; then
+        latest_tag="master"
+    else
+        echo -e "${RED}Error: Neither 'main' nor 'master' branch exist.${NC}"
+        exit 1
+    fi
+fi
+
+check_git
 check_tag_exists "$latest_tag"
-check_tag_exists "$older_tag"
 # Build the release notes content
 gpt_prompt="Can you generate release notes based on the following git log? It's generated using: git log --pretty=format:\"- %B\" ${older_tag}..${latest_tag}
 I need it in markdown format, so I can paste it into the release notes
