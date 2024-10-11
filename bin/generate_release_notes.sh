@@ -1,4 +1,34 @@
 #!/bin/bash
+
+##################################
+# README
+##################################
+# This script helps to generate AI-based release notes for a Git repository.
+# It fetches the Git log between two tags or branches, formats the log for AI processing,
+# and copies the formatted log to the clipboard. The AI prompt includes:
+# - New Features
+# - Improvements
+# - Other Changes
+#
+# Usage:
+#   generate_release_notes <older_tag> [optional: latest_tag]
+#
+# Parameters:
+#   <older_tag>: The tag or branch to start the log from.
+#   [optional: latest_tag]: (default 'main' or 'master') The tag or branch to end the log at.
+#
+# Prerequisites:
+# - The script must be run inside a Git repository.
+# - 'pbcopy' must be available on the system (macOS default clipboard utility).
+#
+# Example:
+#   generate_release_notes v1.0.0 v1.1.0
+#   generate_release_notes v1.0.0
+#
+# The prompt for AI will be prepared and copied to the clipboard for further processing.
+# Note: The script handles color codes for output messages.
+##################################
+
 set -e
 IFS=$'\n'
 
