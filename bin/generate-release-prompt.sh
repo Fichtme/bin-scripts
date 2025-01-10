@@ -30,6 +30,7 @@
 ##################################
 
 set -e
+set -o pipefail  # Exit immediately if any command in a pipeline fails
 IFS=$'\n'
 
 # Color definitions
@@ -37,6 +38,39 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Debug flag
+DEBUG=false
+
+# Parse input arguments for --debug or -v
+for arg in "$@"; do
+    case $arg in
+        --debug|-v)
+            DEBUG=true
+            ;;
+    esac
+done
+
+# Error handling - print the trace on error
+error_trace() {
+    local cmd="$BASH_COMMAND" # Capture the failed command
+    if $DEBUG; then
+        echo -e "${RED}Error: Command '${cmd}' failed.${NC}" >&2
+        echo -e "${RED}Traceback (most recent calls):${NC}" >&2
+        local i=0
+        while caller $i; do
+            ((i++))
+        done
+    else
+        echo -e "${RED}An error occurred. Use --debug or -v for more details.${NC}" >&2
+    fi
+    exit 1
+}
+
+# Attach the error_trace function to ERR signal only if DEBUG is enabled
+if $DEBUG; then
+    trap error_trace ERR
+fi
 
 check_git() {
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
@@ -58,16 +92,28 @@ check_branch_exists() {
     fi
 }
 
+# Check if the tag or branch exists
+check_tag_or_branch_exists() {
+    if git rev-parse --quiet --verify "refs/tags/$1" >/dev/null 2>&1; then
+        return 0  # It's a tag
+    elif git show-ref --verify --quiet "refs/heads/$1"; then
+        return 0  # It's a branch
+    else
+        echo -e "${RED}Error: Neither tag nor branch '$1' exists.${NC}"
+        return 1  # Not found as tag or branch
+    fi
+}
+
 if [ "$#" -lt 1 ]; then
-    echo -e "${YELLOW}Usage: $0 <older_tag> [optional: latest_tag]${NC}"
+    echo -e "${YELLOW}Usage: $0 <older_tag> [optional: latest_tag] [--debug|-v]${NC}"
     exit 1
 fi
 
 older_tag=$1
 
-if [ "$#" -eq 2 ]; then
+if [ "$#" -ge 2 ]; then
     latest_tag=$2
-    check_tag_exists "$latest_tag" || check_branch_exists "$latest_tag"
+    check_tag_or_branch_exists "$latest_tag"
 else
     # Default to 'main' or 'master' if not provided
     if git show-ref --quiet --verify "refs/heads/main"; then
@@ -82,6 +128,7 @@ fi
 
 check_git
 check_tag_exists "$older_tag"
+
 # Build the release notes content
 gpt_prompt="Can you generate release notes based on the following git log? It's generated using: git log --pretty=format:\"- %B\" ${older_tag}..${latest_tag}
 I need it in markdown format, so I can paste it into the release notes
