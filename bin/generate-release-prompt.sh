@@ -130,14 +130,29 @@ check_git
 check_tag_exists "$older_tag"
 
 # Build the release notes content
-gpt_prompt="Can you generate release notes based on the following git log? It's generated using: git log --pretty=format:\"- %B\" ${older_tag}..${latest_tag}
-I need it in markdown format, so I can paste it into the release notes
-It should have 3 sections: New Features, Improvements, and Other Changes
-Please make sure to add the appropriate bullet points under each section
-Each bullet point should start with a title
-This is an example bullet point: **Mail Branding** - Mail service has seen an update with the addition of brand coloring.
-We should not show the actual merge commits
-Below are the changes between the tags ${older_tag} and ${latest_tag}:"
+gpt_prompt="Generate detailed release notes in Markdown format based on the following Git log.
+The release notes must have the following **three sections** in this order:
+1. **New Features**
+2. **Improvements**
+3. **Other Changes**
+
+Markdown formatting rules:
+- Use proper headings (`####`) for each section.
+- Each change should be listed as a bullet point starting with a **bold title**, followed by a short description.
+- If there are no items for a section, include the section with the text 'No changes in this category.'
+
+Example output:
+#### New Features
+- **Mail Branding** - Mail service has been updated to support brand color customization.
+
+#### Improvements
+- **Performance Optimization** - Reduced database query times to improve response latency.
+
+#### Other Changes
+- **Typo Fixes** - Corrected typos in user-visible error messages.
+
+Below are the Git commit messages between the tags ${older_tag} and ${latest_tag}, excluding merge commits:
+"
 
 # Add the git log to release notes, excluding merge commits
 gpt_prompt+=$'\n'
